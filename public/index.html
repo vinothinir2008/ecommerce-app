@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shop</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav id="nav"></nav>
+<div class="container">
+  <input id="q" placeholder="Search products..." oninput="render()">
+  <div class="grid" id="list"></div>
+</div>
+<script src="common.js"></script>
+<script>
+navbar();
+let all = [];
+async function load() { all = await api('/products'); render(); }
+function render() {
+  const q = document.getElementById('q').value.toLowerCase();
+  document.getElementById('list').innerHTML = all
+    .filter(p => p.name.toLowerCase().includes(q))
+    .map(p => `
+      <div class="card product">
+        ${p.image ? `<img src="${p.image}">` : ''}
+        <h3>${p.name}</h3>
+        <p>${p.description || ''}</p>
+        <p class="price">₹${p.price}</p>
+        <button onclick="addCart('${p._id}')">Add to Cart</button>
+      </div>`).join('') || '<p>No products yet</p>';
+}
+function addCart(id) {
+  const p = all.find(x => x._id === id);
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  const item = cart.find(c => c.id === id);
+  if (item) item.qty++;
+  else cart.push({ id, name: p.name, price: p.price, qty: 1 });
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert('Added to cart');
+}
+load();
+</script>
+</body>
+</html>

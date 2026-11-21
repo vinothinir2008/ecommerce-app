@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>All Orders</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav id="nav"></nav>
+<div class="container">
+  <h2>All Orders</h2>
+  <div id="list"></div>
+</div>
+<script src="common.js"></script>
+<script>
+if (role() !== 'admin') location.href = 'login.html';
+navbar();
+const states = ['Placed', 'Shipped', 'Delivered'];
+async function load() {
+  const orders = await api('/orders');
+  document.getElementById('list').innerHTML = orders.map(o => `
+    <div class="card" style="margin-bottom:12px">
+      <b>${o.userName || 'User'}</b> | ${new Date(o.createdAt).toLocaleString()}
+      <p>${o.items.map(i => `${i.name} x${i.qty}`).join(', ')}</p>
+      <p>📍 ${o.address}</p>
+      <p class="price">₹${o.total}</p>
+      <select onchange="setStatus('${o._id}', this.value)">
+        ${states.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+      </select>
+    </div>`).join('') || '<p>No orders</p>';
+}
+async function setStatus(id, status) { await api('/orders/' + id, 'PUT', { status }); }
+load();
+</script>
+</body>
+</html>

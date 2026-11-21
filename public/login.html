@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav id="nav"></nav>
+<div class="auth-box card">
+  <h2 id="title">Login</h2>
+  <input id="name" placeholder="Name" style="display:none">
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <input id="adminKey" placeholder="Admin key (optional)" style="display:none">
+  <button onclick="go()">Submit</button>
+  <p id="msg" style="color:red"></p>
+  <p><a href="#" onclick="toggle()" id="sw">New user? Register</a></p>
+</div>
+<script src="common.js"></script>
+<script>
+navbar();
+let isLogin = true;
+function toggle() {
+  isLogin = !isLogin;
+  document.getElementById('title').innerText = isLogin ? 'Login' : 'Register';
+  document.getElementById('name').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('adminKey').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('sw').innerText = isLogin ? 'New user? Register' : 'Have account? Login';
+}
+async function go() {
+  const msg = document.getElementById('msg');
+  msg.innerText = '';
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    if (!isLogin) {
+      await api('/auth/register', 'POST', {
+        name: document.getElementById('name').value,
+        email, password,
+        adminKey: document.getElementById('adminKey').value
+      });
+    }
+    const d = await api('/auth/login', 'POST', { email, password });
+    localStorage.setItem('token', d.token);
+    localStorage.setItem('role', d.role);
+    localStorage.setItem('name', d.name);
+    location.href = d.role === 'admin' ? 'admin.html' : 'index.html';
+  } catch (e) { msg.innerText = e.message; }
+}
+</script>
+</body>
+</html>

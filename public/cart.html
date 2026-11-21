@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cart</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav id="nav"></nav>
+<div class="container">
+  <h2>Your Cart</h2>
+  <div id="items"></div>
+  <div class="card" id="checkout" style="margin-top:15px">
+    <h3 id="total"></h3>
+    <textarea id="address" placeholder="Delivery address"></textarea>
+    <button class="green" onclick="placeOrder()">Place Order</button>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+navbar();
+let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+function save() { localStorage.setItem('cart', JSON.stringify(cart)); render(); }
+function render() {
+  const box = document.getElementById('items');
+  if (!cart.length) {
+    box.innerHTML = '<p>Cart is empty</p>';
+    document.getElementById('checkout').style.display = 'none';
+    return;
+  }
+  box.innerHTML = '<table><tr><th>Item</th><th>Price</th><th>Qty</th><th></th></tr>' +
+    cart.map((c, i) => `<tr><td>${c.name}</td><td>₹${c.price}</td>
+      <td><button style="width:35px" onclick="chg(${i},-1)">-</button> ${c.qty}
+          <button style="width:35px" onclick="chg(${i},1)">+</button></td>
+      <td><button class="red" style="width:70px" onclick="rm(${i})">X</button></td></tr>`).join('') + '</table>';
+  document.getElementById('total').innerText =
+    'Total: ₹' + cart.reduce((s, c) => s + c.price * c.qty, 0);
+}
+function chg(i, d) { cart[i].qty += d; if (cart[i].qty < 1) cart.splice(i, 1); save(); }
+function rm(i) { cart.splice(i, 1); save(); }
+async function placeOrder() {
+  if (!token()) { location.href = 'login.html'; return; }
+  const address = document.getElementById('address').value.trim();
+  if (!address) return alert('Enter address');
+  try {
+    await api('/orders', 'POST', {
+      items: cart.map(c => ({ id: c.id, qty: c.qty })),
+      address, userName: localStorage.getItem('name')
+    });
+    localStorage.removeItem('cart');
+    alert('Order placed!');
+    location.href = 'orders.html';
+  } catch (e) { alert(e.message); }
+}
+render();
+</script>
+</body>
+</html>

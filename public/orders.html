@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Orders</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav id="nav"></nav>
+<div class="container">
+  <h2>My Orders</h2>
+  <div id="list"></div>
+</div>
+<script src="common.js"></script>
+<script>
+if (!token()) location.href = 'login.html';
+navbar();
+(async () => {
+  const orders = await api('/orders/mine');
+  document.getElementById('list').innerHTML = orders.map(o => `
+    <div class="card" style="margin-bottom:12px">
+      <b>Status: ${o.status}</b> | ${new Date(o.createdAt).toLocaleString()}
+      <p>${o.items.map(i => `${i.name} x${i.qty}`).join(', ')}</p>
+      <p class="price">Total: ₹${o.total}</p>
+    </div>`).join('') || '<p>No orders yet</p>';
+})();
+</script>
+</body>
+</html>
